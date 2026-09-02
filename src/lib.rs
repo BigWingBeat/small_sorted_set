@@ -37,8 +37,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// A collection that guarantees its elements are always in sorted order, and that there are no duplicate elements.
 /// Is stored inline on the stack for up to `N` elements, beyond which it automatically spills over to a heap allocation.
 ///
-/// A bit like a [`BTreeSet`], but backed by a single sorted [`SmallVec<[T; N]>`] instead of a tree of nodes.
-/// This makes it simpler, and faster to construct and read from, in exchange for mutations possibly being slower.
+/// A bit like a [`BTreeSet`](alloc::collections::BTreeSet), but backed by a single sorted [`SmallVec<[T; N]>`](SmallVec) instead
+/// of a tree of nodes. This makes it simpler, and faster to construct and read from, in exchange for mutations possibly being slower.
 #[derive(Clone, Eq, PartialOrd, Ord, Debug)]
 pub struct SmallSortedSet<T, const N: usize> {
     vec: SmallVec<[T; N]>,
@@ -135,7 +135,9 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
         self.vec.remove(index)
     }
 
-    /// Removes and returns the element at the given index. If the given index is out of bounds, returns `None`.
+    /// Removes and returns the element at the given index.
+    ///
+    /// If the given index is out of bounds, returns `None`.
     #[inline]
     pub fn try_remove_at(&mut self, index: usize) -> Option<T> {
         if index >= self.vec.len() {
@@ -157,6 +159,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     }
 
     /// Shrinks the collection to `len` elements, dropping everything at and after that index.
+    ///
     /// If the given length is greater than or equal to the current number of elements, this does nothing.
     #[inline]
     pub fn truncate(&mut self, len: usize) {
@@ -200,6 +203,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
 
     // Waiting on SmallVec to update to add this method
     // /// Directly inserts the given element at the given index, without checking for correct sort order.
+    // ///
     // /// Returns a reference to the new element.
     // ///
     // /// # Safety
@@ -239,6 +243,7 @@ impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
     }
 
     /// Inserts the given element into sorted position.
+    ///
     /// This returns `Ok` if the element was successfully inserted, and returns `Err`
     /// if the element was already present, in both cases carrying the index of the element.
     pub fn insert(&mut self, element: T) -> Result<usize, usize> {
@@ -253,6 +258,7 @@ impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
     }
 
     /// Removes the given element, if it is present.
+    ///
     /// Returns `Ok` if the element was successfully removed, with the (former) index of the element.
     /// If the element was not present, returns `Err` and the index that the element would have been at.
     pub fn remove(&mut self, element: &T) -> Result<usize, usize> {
