@@ -40,9 +40,9 @@ pub struct SmallSortedSet<T, const N: usize> {
 impl<T, const N: usize> SmallSortedSet<T, N> {
     /// Constructs a new, empty `SmallSortedSet`.
     #[inline]
-    pub const fn new() -> Self {
+    pub fn new() -> Self {
         Self {
-            vec: SmallVec::new_const(),
+            vec: SmallVec::new(),
         }
     }
 

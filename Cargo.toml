@@ -8,6 +8,7 @@ keywords = ["vector", "vec", "stack", "no_std", "small"]
 categories = ["data-structures"]
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.51"
 
 [dependencies]
-smallvec = { version = "1.16", features = ["union", "const_generics", "const_new"] }
+smallvec = { version = "1.16", features = ["union", "const_generics"] }

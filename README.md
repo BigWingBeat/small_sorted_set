@@ -9,6 +9,10 @@ This is a type that is very comparable to a [`BTreeSet`](https://doc.rust-lang.o
 
 Additionally, being backed by a `SmallVec` rather than a std `Vec` allows it to be automatically inlined on the stack for small numbers of elements, significantly improving performance for small collections.
 
+### MSRV
+
+The minimum supported Rust version for this crate is `1.51`, due to depending on the `const_generics` feature of `SmallVec`.
+
 ## See Also
 - [smallvec](https://crates.io/crates/smallvec) - The backing vector type.
 - [sdset](https://crates.io/crates/sdset) - Fast set operations on sorted and deduplicated slices.
