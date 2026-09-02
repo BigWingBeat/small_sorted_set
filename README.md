@@ -11,7 +11,7 @@ Additionally, being backed by a `SmallVec` rather than a std `Vec` allows it to 
 
 ### MSRV
 
-The minimum supported Rust version for this crate is `1.51`, due to depending on the `const_generics` feature of `SmallVec`.
+The minimum supported Rust version for this crate is `1.85`, due to using edition 2024.
 
 ## See Also
 - [smallvec](https://crates.io/crates/smallvec) - The backing vector type.
