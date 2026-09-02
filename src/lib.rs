@@ -30,7 +30,7 @@ use smallvec::SmallVec;
 ///
 /// A bit like a `BTreeSet`, but backed by a single sorted `SmallVec<[T; N]>` instead of a tree of nodes.
 /// This makes it simpler, and faster to construct and read from, in exchange for mutations being slower.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, Eq, PartialOrd, Ord, Debug)]
 pub struct SmallSortedSet<T, const N: usize> {
     vec: SmallVec<[T; N]>,
 }
@@ -340,6 +340,17 @@ impl<'a, T, const N: usize> IntoIterator for &'a SmallSortedSet<T, N> {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.vec.iter()
+    }
+}
+
+impl<T, U, const TN: usize, const UN: usize> PartialEq<SmallSortedSet<U, UN>>
+    for SmallSortedSet<T, TN>
+where
+    T: PartialEq<U>,
+{
+    #[inline]
+    fn eq(&self, other: &SmallSortedSet<U, UN>) -> bool {
+        self.vec == other.vec
     }
 }
 
