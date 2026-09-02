@@ -58,7 +58,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
 
     /// Returns a reference to the inner `SmallVec`.
     #[inline]
-    pub fn as_vec(&self) -> &SmallVec<[T; N]> {
+    pub const fn as_vec(&self) -> &SmallVec<[T; N]> {
         &self.vec
     }
 
