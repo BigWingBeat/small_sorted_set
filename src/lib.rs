@@ -422,38 +422,95 @@ where
 
 #[cfg(test)]
 mod tests {
-    use smallvec::smallvec_inline;
+    use core::assert_matches;
 
-    use super::*;
+    use smallvec::smallvec;
+
+    const TEST_INLINE_SIZE: usize = 6;
+    type SmallVec = smallvec::SmallVec<[i32; TEST_INLINE_SIZE]>;
+    type SmallSortedSet = super::SmallSortedSet<i32, TEST_INLINE_SIZE>;
 
     #[test]
-    fn sorted_set() {
-        let mut s = SmallSortedSet::<_, 3>::new();
-        assert_eq!(s.insert(5), Ok(0));
-        assert_eq!(s.insert(3), Ok(0));
-        assert_eq!(s.insert(4), Ok(1));
-        assert_eq!(s.insert(4), Err(1));
-        assert_eq!(s.len(), 3);
-        assert_eq!(s.binary_search(&3), Ok(0));
+    fn from_unsorted() {
+        let unsorted = smallvec![5, 0, 2, 4, 3, 1, 5, 2, 0, 3, 4, 5, 1, 2, 4, 0, 3];
+        let sorted: SmallVec = smallvec![0, 1, 2, 3, 4, 5];
+        let a = SmallSortedSet::from_unsorted(unsorted);
+        let mut b = SmallSortedSet::new();
+        b.extend(sorted);
+        assert_eq!(a, b);
+    }
 
-        assert_eq!(
-            *SmallSortedSet::from_unsorted(smallvec_inline![5, -10, 99, -10, -11, 10, 2, 17, 10]),
-            vec![-11, -10, 2, 5, 10, 17, 99]
-        );
+    #[test]
+    fn insert() {
+        let mut vec = SmallSortedSet::new();
+        assert_matches!(vec.insert(5), Result::Ok(0));
+        assert_matches!(vec.insert(0), Result::Ok(0));
+        assert_matches!(vec.insert(2), Result::Ok(1));
+        assert_matches!(vec.insert(4), Result::Ok(2));
+        assert_matches!(vec.insert(3), Result::Ok(2));
+        assert_matches!(vec.insert(1), Result::Ok(1));
+        assert_matches!(vec.insert(5), Result::Err(5));
+        assert_matches!(vec.insert(2), Result::Err(2));
+        assert_matches!(vec.insert(0), Result::Err(0));
+        assert_matches!(vec.insert(3), Result::Err(3));
+        assert_matches!(vec.insert(4), Result::Err(4));
+        assert_matches!(vec.insert(5), Result::Err(5));
+        assert_matches!(vec.insert(1), Result::Err(1));
+        assert_matches!(vec.insert(2), Result::Err(2));
+        assert_matches!(vec.insert(4), Result::Err(4));
+        assert_matches!(vec.insert(0), Result::Err(0));
+        assert_matches!(vec.insert(3), Result::Err(3));
+    }
 
-        assert_eq!(
-            SmallSortedSet::from_unsorted(smallvec_inline![5, -10, 99, -10, -11, 10, 2, 17, 10]),
-            vec![5, -10, 99, -10, -11, 10, 2, 17, 10].into()
-        );
+    #[test]
+    fn remove() {
+        let mut vec = SmallSortedSet::new();
+        let sorted: SmallVec = smallvec![0, 1, 2, 3, 4, 5];
+        vec.extend(sorted);
 
-        let mut s = SmallSortedSet::<_, 7>::new();
-        s.extend([5, -11, -10, 99, -11, 2, 17, 2, 10]);
-        assert_eq!(*s, vec![-11, -10, 2, 5, 10, 17, 99]);
-        s.remove_at(0);
-        let _ = s.insert(1);
-        assert_eq!(
-            s.drain(..).collect::<Vec<i32>>(),
-            vec![-10, 1, 2, 5, 10, 17, 99]
-        );
+        assert_matches!(vec.remove(&5), Result::Ok(5));
+        assert_matches!(vec.remove(&5), Result::Err(5));
+        assert_matches!(vec.remove(&0), Result::Ok(0));
+        assert_matches!(vec.remove(&0), Result::Err(0));
+        assert_matches!(vec.remove(&2), Result::Ok(1));
+        assert_matches!(vec.remove(&2), Result::Err(1));
+        assert_matches!(vec.remove(&4), Result::Ok(2));
+        assert_matches!(vec.remove(&4), Result::Err(2));
+        assert_matches!(vec.remove(&3), Result::Ok(1));
+        assert_matches!(vec.remove(&3), Result::Err(1));
+        assert_matches!(vec.remove(&1), Result::Ok(0));
+        assert_matches!(vec.remove(&1), Result::Err(0));
+
+        assert_matches!(vec.remove(&0), Result::Err(0));
+        assert_matches!(vec.remove(&1), Result::Err(0));
+        assert_matches!(vec.remove(&2), Result::Err(0));
+        assert_matches!(vec.remove(&3), Result::Err(0));
+        assert_matches!(vec.remove(&4), Result::Err(0));
+        assert_matches!(vec.remove(&5), Result::Err(0));
+    }
+
+    #[test]
+    fn extend() {
+        let sorted: SmallVec = smallvec![1, 2, 4, 5, 8, 9];
+        let mut vec = SmallSortedSet::new();
+        vec.extend(sorted.iter().copied());
+
+        assert_eq!(vec.as_vec(), &sorted);
+
+        let duplicates: SmallVec = smallvec![
+            8, 1, 4, 2, 9, 5, 4, 9, 8, 2, 1, 5, 4, 8, 9, 1, 5, 2, 4, 2, 8, 5, 9
+        ];
+
+        vec.extend(duplicates);
+
+        assert_eq!(vec.as_vec(), &sorted);
+
+        let new: SmallVec = smallvec![10, 3, 0, 6, 0, 7, 11, 3, 6];
+
+        vec.extend(new);
+
+        let expected: SmallVec = smallvec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+        assert_eq!(vec.as_vec(), &expected);
     }
 }
