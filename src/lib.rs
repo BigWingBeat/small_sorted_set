@@ -93,6 +93,13 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
         self.vec.len()
     }
 
+    // This is really just to get Clippy to shut up
+    /// Returns `true` if the collection is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Removes and returns the element at the given index.
     ///
     /// # Panic
