@@ -17,6 +17,12 @@ This crate does not depend on `std`.
 
 The minimum supported Rust version for this crate is `1.85`, due to using edition 2024.
 
+### Feature Flags
+
+This crate has no default features.
+
+- If the `serde` feature is enabled, `SmallSortedVec` implements the `serde::Serialize` and `serde::Deserialize` traits.
+
 ## See Also
 - [smallvec](https://crates.io/crates/smallvec) - The backing vector type.
 - [sdset](https://crates.io/crates/sdset) - Fast set operations on sorted and deduplicated slices.

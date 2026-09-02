@@ -10,5 +10,9 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 
+[features]
+serde = ["dep:serde", "smallvec/serde"]
+
 [dependencies]
 smallvec = { version = "1.16", features = ["union", "const_generics"] }
+serde = { version = "1.0", optional = true, default-features = false }

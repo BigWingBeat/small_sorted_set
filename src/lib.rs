@@ -31,6 +31,9 @@ use core::{
 
 use smallvec::SmallVec;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
 /// A collection that guarantees its elements are always in sorted order, and that there are no duplicate elements.
 /// Is stored inline on the stack for up to `N` elements, beyond which it automatically spills over to a heap allocation.
 ///
@@ -392,6 +395,28 @@ impl<T: Hash, const N: usize> Hash for SmallSortedSet<T, N> {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.vec.hash(state);
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<T, const N: usize> Serialize for SmallSortedSet<T, N>
+where
+    T: Serialize,
+{
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.vec.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+impl<'de, T, const N: usize> Deserialize<'de> for SmallSortedSet<T, N>
+where
+    T: Deserialize<'de> + Ord,
+{
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        SmallVec::deserialize(deserializer).map(Self::from_unsorted)
     }
 }
 
