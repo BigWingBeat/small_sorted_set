@@ -7,6 +7,8 @@ A [`SmallVec`](https://docs.rs/smallvec/latest/smallvec/struct.SmallVec.html)-ba
 
 This is a type that is very comparable to a [`BTreeSet`](https://doc.rust-lang.org/stable/std/collections/btree_set/struct.BTreeSet.html), but is all stored in a single, contiguous vector, instead of being split across a tree of separately allocated nodes. This makes it simpler and more cache friendly, improving performance of construction, ser/de, and reads. The tradeoff is that mutations may be slower, by virtue of requiring larger copies and reallocations.
 
+Additionally, being backed by a `SmallVec` rather than a std `Vec` allows it to be automatically inlined on the stack for small numbers of elements, significantly improving performance for small collections.
+
 ## See Also
 - [smallvec](https://crates.io/crates/smallvec) - The backing vector type.
 - [sdset](https://crates.io/crates/sdset) - Fast set operations on sorted and deduplicated slices.
