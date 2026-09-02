@@ -46,6 +46,7 @@ pub struct SmallSortedSet<T, const N: usize> {
 
 impl<T, const N: usize> SmallSortedSet<T, N> {
     /// Constructs a new, empty `SmallSortedSet`.
+    #[must_use]
     #[inline]
     pub fn new() -> Self {
         Self {
@@ -56,6 +57,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     /// Constructs a new, empty `SmallSortedSet`, with the specified capacity pre-allocated.
     ///
     /// Will only create a heap allocation if `capacity` is larger than the inline capacity `N`.
+    #[must_use]
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -70,6 +72,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     }
 
     /// Consume `self` and return ownership of the sorted inner `SmallVec`.
+    #[must_use]
     #[inline]
     pub fn into_vec(self) -> SmallVec<[T; N]> {
         self.vec
@@ -155,7 +158,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     /// Clears the collection, removing all values.
     #[inline]
     pub fn clear(&mut self) {
-        self.vec.clear()
+        self.vec.clear();
     }
 
     /// Shrinks the collection to `len` elements, dropping everything at and after that index.
@@ -183,7 +186,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
         // For some stupid reason `SmallVec::retain` passes `&mut T` instead of `&T` despite also having a
         // separate `retain_mut` method. We can't expose mutable references to elements as that could allow
         // changing their sort order, thus violating our invariants.
-        self.vec.retain(|t| f(t))
+        self.vec.retain(|t| f(t));
     }
 
     /// Directly inserts the given element at the given index, without checking for correct sort order.
@@ -198,7 +201,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     /// Panics if the given index is out of bounds.
     #[inline]
     pub unsafe fn insert_at(&mut self, index: usize, element: T) {
-        self.vec.insert(index, element)
+        self.vec.insert(index, element);
     }
 
     // Waiting on SmallVec to update to add this method
@@ -223,6 +226,7 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
 
 impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
     /// Constructs a new `SmallSortedSet` from the specified collection, by sorting and deduplicating the contained elements.
+    #[must_use]
     pub fn from_unsorted(mut vec: SmallVec<[T; N]>) -> Self {
         vec.sort_unstable();
         vec.dedup();
@@ -230,6 +234,7 @@ impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
     }
 
     /// Constructs a new `SmallSortedSet` from the specified collection, by sorting and deduplicating the contained elements.
+    #[must_use]
     #[inline]
     pub fn from_unsorted_vec(vec: Vec<T>) -> Self {
         Self::from_unsorted(vec.into())
@@ -237,6 +242,7 @@ impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
 
     // We have an inherent method for this, rather than forwarding to [`Slice::contains`] via `Deref`, to avoid the linear scan
     /// Returns `true` if the given element is present in the collection.
+    #[must_use]
     #[inline]
     pub fn contains(&self, element: &T) -> bool {
         self.vec.binary_search(element).is_ok()
