@@ -16,6 +16,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#![doc = include_str!("../README.md")]
+
 use std::{
     borrow::Borrow,
     hash::{Hash, Hasher},
@@ -28,14 +30,15 @@ use smallvec::SmallVec;
 /// A collection that guarantees its elements are always in sorted order, and that there are no duplicate elements.
 /// Is stored inline on the stack for up to `N` elements, beyond which it automatically spills over to a heap allocation.
 ///
-/// A bit like a `BTreeSet`, but backed by a single sorted `SmallVec<[T; N]>` instead of a tree of nodes.
-/// This makes it simpler, and faster to construct and read from, in exchange for mutations being slower.
+/// A bit like a [`BTreeSet`], but backed by a single sorted [`SmallVec<[T; N]>`] instead of a tree of nodes.
+/// This makes it simpler, and faster to construct and read from, in exchange for mutations possibly being slower.
 #[derive(Clone, Eq, PartialOrd, Ord, Debug)]
 pub struct SmallSortedSet<T, const N: usize> {
     vec: SmallVec<[T; N]>,
 }
 
 impl<T, const N: usize> SmallSortedSet<T, N> {
+    /// Constructs a new, empty `SmallSortedSet`.
     #[inline]
     pub const fn new() -> Self {
         Self {
@@ -43,6 +46,9 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
         }
     }
 
+    /// Constructs a new, empty `SmallSortedSet`, with the specified capacity pre-allocated.
+    ///
+    /// Will only create a heap allocation if `capacity` is larger than the inline capacity `N`.
     #[inline]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -50,31 +56,43 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
         }
     }
 
-    /// Returns a reference to the inner `SmallVec`
+    /// Returns a reference to the inner `SmallVec`.
     #[inline]
     pub fn as_vec(&self) -> &SmallVec<[T; N]> {
         &self.vec
     }
 
-    /// Consume `self` and return the sorted inner `SmallVec`
+    /// Consume `self` and return ownership of the sorted inner `SmallVec`.
     #[inline]
     pub fn into_vec(self) -> SmallVec<[T; N]> {
         self.vec
     }
 
-    /// See [`SmallVec::reserve`]
+    /// Reserve capacity for `additional` more elements to be inserted.
+    ///
+    /// May reserve more space to avoid frequent reallocations.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the capacity computation overflows `usize`.
     #[inline]
     pub fn reserve(&mut self, additional: usize) {
         self.vec.reserve(additional);
     }
 
-    /// See [`SmallVec::reserve_exact`]
+    /// Reserve the minimum capacity for `additional` more elements to be inserted.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new capacity overflows `usize`.
     #[inline]
     pub fn reserve_exact(&mut self, additional: usize) {
         self.vec.reserve_exact(additional);
     }
 
-    /// See [`SmallVec::shrink_to_fit`]
+    /// Shrink the capacity of the collection as much as possible.
+    ///
+    /// When possible, this will move data from an external heap buffer to the collection's inline storage.
     #[inline]
     pub fn shrink_to_fit(&mut self) {
         self.vec.shrink_to_fit();
@@ -102,7 +120,8 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
 
     /// Removes and returns the element at the given index.
     ///
-    /// # Panic
+    /// # Panics
+    ///
     /// Panics if `index` is out of bounds.
     #[inline]
     pub fn remove_at(&mut self, index: usize) -> T {
@@ -138,26 +157,34 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     }
 
     /// Removes a range of elements, returning a double-ended iterator over the removed subslice.
-    /// See: [`SmallVec::drain`]
+    ///
+    /// # Panics
+    ///
+    /// Panics if the starting point is greater than the end point or if
+    /// the end point is greater than the length of the collection.
     #[inline]
     pub fn drain(&mut self, range: impl RangeBounds<usize>) -> smallvec::Drain<'_, [T; N]> {
         self.vec.drain(range)
     }
 
     /// Retains only the elements for which `F` returns `true`, removing all other elements.
-    /// See: [`SmallVec::retain`]
     #[inline]
     pub fn retain(&mut self, mut f: impl FnMut(&T) -> bool) {
-        // For some stupid reason `SmallVec::retain` passes `&mut T` instead of `&T` despite also having a separate `retain_mut` method
+        // For some stupid reason `SmallVec::retain` passes `&mut T` instead of `&T` despite also having a
+        // separate `retain_mut` method. We can't expose mutable references to elements as that could allow
+        // changing their sort order, thus violating our invariants.
         self.vec.retain(|t| f(t))
     }
 
     /// Directly inserts the given element at the given index, without checking for correct sort order.
     ///
     /// # Safety
-    /// The collection must still be sorted after the given element is inserted at the given index.
     ///
-    /// # Panic
+    /// The collection must still be sorted after the given element is inserted at the given index,
+    /// and the given element must not compare equal to any other element already in the collection.
+    ///
+    /// # Panics
+    ///
     /// Panics if the given index is out of bounds.
     #[inline]
     pub unsafe fn insert_at(&mut self, index: usize, element: T) {
@@ -169,9 +196,12 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
     // /// Returns a reference to the new element.
     // ///
     // /// # Safety
-    // /// The collection must still be sorted after the given element is inserted at the given index.
     // ///
-    // /// # Panic
+    // /// The collection must still be sorted after the given element is inserted at the given index,
+    // /// and the given element must not compare equal to any other element already in the collection.
+    // ///
+    // /// # Panics
+    // ///
     // /// Panics if the given index is out of bounds.
     // #[must_use = "if you don't need a reference to the value, use `SortedSet::insert_at` instead"]
     // #[inline]
@@ -181,14 +211,14 @@ impl<T, const N: usize> SmallSortedSet<T, N> {
 }
 
 impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
-    /// Sorts and deduplicates the given elements
+    /// Constructs a new `SmallSortedSet` from the specified collection, by sorting and deduplicating the contained elements.
     pub fn from_unsorted(mut vec: SmallVec<[T; N]>) -> Self {
         vec.sort_unstable();
         vec.dedup();
         Self { vec }
     }
 
-    /// Sorts and deduplicates the given elements
+    /// Constructs a new `SmallSortedSet` from the specified collection, by sorting and deduplicating the contained elements.
     #[inline]
     pub fn from_unsorted_vec(vec: Vec<T>) -> Self {
         Self::from_unsorted(vec.into())
@@ -228,7 +258,7 @@ impl<T: Ord, const N: usize> SmallSortedSet<T, N> {
 }
 
 impl<T: Ord + Clone, const N: usize> SmallSortedSet<T, N> {
-    /// Clones, sorts, and deduplicates the given elements
+    /// Constructs a new `SmallSortedSet` from the specified slice, by cloning, sorting, and deduplicating the contained elements.
     #[inline]
     pub fn from_unsorted_slice(slice: &[T]) -> Self {
         Self::from_unsorted(slice.into())
