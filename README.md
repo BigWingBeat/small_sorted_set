@@ -9,6 +9,10 @@ This is a type that is very comparable to a [`BTreeSet`](https://doc.rust-lang.o
 
 Additionally, being backed by a `SmallVec` rather than a std `Vec` allows it to be automatically inlined on the stack for small numbers of elements, significantly improving performance for small collections.
 
+### `no_std` support
+
+This crate does not depend on `std`.
+
 ### MSRV
 
 The minimum supported Rust version for this crate is `1.85`, due to using edition 2024.

@@ -17,8 +17,12 @@
 */
 
 #![doc = include_str!("../README.md")]
+#![no_std]
 
-use std::{
+extern crate alloc;
+
+use alloc::vec::Vec;
+use core::{
     borrow::Borrow,
     hash::{Hash, Hasher},
     ops::{Deref, Index, RangeBounds},
@@ -365,7 +369,7 @@ impl<T, const N: usize> IntoIterator for SmallSortedSet<T, N> {
 
 impl<'a, T, const N: usize> IntoIterator for &'a SmallSortedSet<T, N> {
     type Item = &'a T;
-    type IntoIter = std::slice::Iter<'a, T>;
+    type IntoIter = core::slice::Iter<'a, T>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
