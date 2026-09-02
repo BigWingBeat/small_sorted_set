@@ -6,7 +6,7 @@ documentation = "https://docs.rs/small_sorted_set"
 repository = "https://github.com/BigWingBeat/small_sorted_set"
 keywords = ["vector", "vec", "stack", "no_std", "small"]
 categories = ["data-structures"]
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 rust-version = "1.85"
 
